@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Остаток от деления многочленов в Z2</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    input[type="text"] {
+      width: 300px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 5px 10px;
+      margin-top: 10px;
+    }
+    .result {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>Остаток от деления многочленов в поле Z<sub>2</sub></h2>
+
+  <label for="dividend">Делимое (введите биты, например, 1 0 0 1 0 1):</label><br>
+  <input type="text" id="dividend" placeholder="Введите делимое"><br>
+  <span id="dividendDisplay"></span><br>
+
+  <label for="divisor">Делитель (введите биты, например, 1 1 1):</label><br>
+  <input type="text" id="divisor" placeholder="Введите делитель"><br>
+  <span id="divisorDisplay"></span><br>
+
+  <button onclick="calculateRemainder()">Рассчитать</button>
+
+  <div class="result" id="result"></div>
+  <div class="result" id="result_binary"></div>
+
+  <script>
+    // Функция для конвертации битов в многочлен (от меньшей степени к большей)
+    function bitsToPolynomial(bits) {
+      let terms = [];
+      for (let i = 0; i < bits.length; i++) {
+        if (bits[i] === '1') {
+          if (i === 0) {
+            terms.push('1');
+          } else if (i === 1) {
+            terms.push('x');
+          } else {
+            terms.push(`x^${i}`);
+          }
+        }
+      }
+      return terms.length > 0 ? terms.join(' + ') : '0';
+    }
+
+    // Функция для нахождения остатка от деления многочленов
+    function polynomialMod(dividend, divisor) {
+      let remainder = dividend.slice();
+      let divisorDegree = divisor.length - 1;
+
+      function trimLeadingZeros(poly) {
+        while (poly.length > 1 && poly[poly.length - 1] === 0) {
+          poly.pop();
+        }
+        return poly;
+      }
+
+      while (remainder.length >= divisor.length) {
+        let degreeDiff = remainder.length - divisor.length;
+        for (let i = 0; i <= divisorDegree; i++) {
+          remainder[degreeDiff + i] ^= divisor[i];
+        }
+        remainder = trimLeadingZeros(remainder);
+      }
+
+      return remainder;
+    }
+
+    // Функция для обработки ввода и расчёта
+    function calculateRemainder() {
+      const dividendInput = document.getElementById('dividend').value.trim().split(' ').map(Number);
+      const divisorInput = document.getElementById('divisor').value.trim().split(' ').map(Number);
+
+      if (dividendInput.some(isNaN) || divisorInput.some(isNaN) || divisorInput.length === 0) {
+        alert('Пожалуйста, введите корректные биты (0 и 1).');
+        return;
+      }
+
+      document.getElementById('dividendDisplay').innerText = 'Делимое: ' + bitsToPolynomial(dividendInput.map(String));
+      document.getElementById('divisorDisplay').innerText = 'Делитель: ' + bitsToPolynomial(divisorInput.map(String));
+
+      const result = polynomialMod(dividendInput, divisorInput);
+      document.getElementById('result').innerText = 'Остаток: ' + bitsToPolynomial(result.map(String));
+
+      const resultBinary = result.map(bit => bit === 1 ? '1' : '0').join(' ');
+      document.getElementById('result_binary').innerText = 'Остаток в двоичном виде: ' + resultBinary;
+    }
+  </script>
+</body>
+</html>
